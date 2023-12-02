@@ -1,13 +1,53 @@
-﻿
+
 # Create a PowerShell function to add a bookmark entry to the Bookmarks file
 function Add-Bookmark {
     param (
         [string]$Url,
         [string]$Name,
         [string]$ParentId,
-        [string]$BookmarksPath
+        [string]$BrowserName
     )
+    if($BrowserName -eq "Chrome"){
+        $BookmarksPath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default"
+    }
+    elseif($BrowserName -eq "Edge"){
+        $BookmarksPath = "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default"
+    }
     if(Test-Path $BookmarksPath){
+        if(!(Test-Path "$BookmarksPath\Bookmarks")){
+            Write-Host "Creating Bookmarks file..."
+            $emptyBookmarksContent = @"
+    {
+        "checksum": "",
+        "roots": {
+            "bookmark_bar": {
+                "children": [],
+                "date_added": "2000-01-01T00:00:00.000Z",
+                "date_modified": "2000-01-01T00:00:00.000Z",
+                "id": "1",
+                "name": "Bookmarks bar"
+            },
+            "other": {
+                "children": [],
+                "date_added": "2000-01-01T00:00:00.000Z",
+                "date_modified": "2000-01-01T00:00:00.000Z",
+                "id": "2",
+                "name": "Other bookmarks"
+            },
+            "synced": {
+                "children": [],
+                "date_added": "2000-01-01T00:00:00.000Z",
+                "date_modified": "2000-01-01T00:00:00.000Z",
+                "id": "3",
+                "name": "Mobile bookmarks"
+            }
+        },
+        "version": 1
+    }
+"@
+            $emptyBookmarksContent | Out-File -FilePath "$BookmarksPath\Bookmarks" -Encoding utf8
+        }
+        $BookmarksPath = "$BookmarksPath\Bookmarks"
     
         # Function to check if a bookmark with the specified URL exists
         function Check-BookmarkExists {
@@ -55,10 +95,10 @@ function Add-Bookmark {
 
             Write-Host "$Name has been added to bookmarks."
         } else {
-            Write-Host "$Name already exists in bookmarks."
+            Write-Host "$Name already exists in bookmarks. At $BookmarksPath"
         }
     }
-    else{
+    elseif(Test-Path $BookmarksPath){
         Write-Host "$BookmarksPath not found"
     }
 }
@@ -66,9 +106,4 @@ function Add-Bookmark {
 
 
 # Call the function to add Netflix as a bookmark in Chrome
-Add-Bookmark -Url "https://www.netflix.com" -Name "Netflix" -ParentId "bookmark_bar" -BookmarksPath "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Bookmarks"
-
-
-
-# Call the function to add Netflix as a bookmark in Edge
-Add-Bookmark -Url "https://www.netflix.com" -Name "Netflix" -ParentId "bookmark_bar" -BookmarksPath "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Bookmarks"
+Add-Bookmark -Url "https://www.netflix.com" -Name "Netflix" -ParentId "bookmark_bar" -BrowserName "Edge"
